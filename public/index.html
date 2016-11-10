@@ -174,39 +174,63 @@
 		//console.log("length test: " + dataset.length);
 		//console.log("test: " + dataset[0].state);
 
-		determines Trump or Clinton, and calculates the average scores and margin of victory
+		//determines Trump or Clinton, and calculates the average scores and margin of victory
 		averagesByState = average(data);
 
 		console.log(averagesByState);	
 		// return averagesByState;
+
+		populateMap(averagesByState);
 	});
 
-
-	var sampleData ={};	/* Sample random data. */	
-
+	sampleData = {};
+	function populateMap (arr){
 	["HI", "AK", "FL", "SC", "GA", "AL", "NC", "TN", "RI", "CT", "MA",
 	"ME", "NH", "VT", "NY", "NJ", "PA", "DE", "MD", "WV", "KY", "OH", 
 	"MI", "WY", "MT", "ID", "WA", "DC", "TX", "CA", "AZ", "NV", "UT", 
 	"CO", "NM", "OR", "ND", "SD", "NE", "IA", "MS", "IN", "IL", "MN", 
 	"WI", "MO", "AR", "OK", "KS", "LS", "VA"]
 		.forEach(function(d){ 
-			var low=Math.round(100*Math.random()), 
-			 	mid=Math.round(100*Math.random()), 
-			 	high=Math.round(100*Math.random());
+			// var low=Math.round(100*Math.random()), 
+			//  	mid=Math.round(100*Math.random()), 
+			//  	high=Math.round(100*Math.random());
 
 			sampleData[d] = {
-								low: d3.min([low,mid,high]), 
-								high: d3.max([low,mid,high]), 
-								avg: Math.round((low+mid+high)/3), 
+								winner: arr.winner, 
+								marginVictory: arr.marginVictory, 
 								//color: d3.interpolate("#ffffcc", "#800026")(low/100)
-								color: determineColor(2, "Clinton")
+								color: arr.color
 							}; 
 		});
+		//debugger;
+		
+		uStates.draw("#statesvg", sampleData, tooltipHtml);
+		d3.select(self.frameElement).style("height", "600px");
+
+	}
+	// var sampleData ={};	/* Sample random data. */	
+
+	// ["HI", "AK", "FL", "SC", "GA", "AL", "NC", "TN", "RI", "CT", "MA",
+	// "ME", "NH", "VT", "NY", "NJ", "PA", "DE", "MD", "WV", "KY", "OH", 
+	// "MI", "WY", "MT", "ID", "WA", "DC", "TX", "CA", "AZ", "NV", "UT", 
+	// "CO", "NM", "OR", "ND", "SD", "NE", "IA", "MS", "IN", "IL", "MN", 
+	// "WI", "MO", "AR", "OK", "KS", "LS", "VA"]
+	// 	.forEach(function(d){ 
+	// 		var low=Math.round(100*Math.random()), 
+	// 		 	mid=Math.round(100*Math.random()), 
+	// 		 	high=Math.round(100*Math.random());
+
+	// 		sampleData[d] = {
+	// 							winner: d3.max([low,mid,high]), 
+	// 							marginVictory: Math.round((low+mid+high)/3), 
+	// 							//color: d3.interpolate("#ffffcc", "#800026")(low/100)
+	// 							color: determineColor(2, "Clinton")
+	// 						}; 
+	// 	});
 
 	/* draw states on id #statesvg */	
-	uStates.draw("#statesvg", sampleData, tooltipHtml);
+	// uStates.draw("#statesvg", sampleData, tooltipHtml);
 	
-	d3.select(self.frameElement).style("height", "600px");
 		
 </script>
 </body>
