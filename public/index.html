@@ -54,18 +54,136 @@
 <script src="uStates.js"></script> <!-- creates uStates. -->
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
-
-	function tooltipHtml(n, d){	/* function to create html content string in tooltip div. */
-		// return "<h4>"+n+"</h4><table>"+
-		// 	"<tr><td>Low</td><td>"+(d.low)+"</td></tr>"+
-		// 	"<tr><td>Average</td><td>"+(d.avg)+"</td></tr>"+
-		// 	"<tr><td>High</td><td>"+(d.high)+"</td></tr>"+
-		// 	"</table>";
-		return "<h4>"+n+"</h4><table>"+
-			"<tr><td>State Average</td><td>"+(d.low)+"</td></tr>"+"</table>";
+	//this function draws the tooltip information
+	function tooltipHtml(n, d){	
+			return "<h4>"+n+"</h4><table>" +
+				"<tr><td>Margin: </td><td>" + "+" + (d.marginVictory) + "</td></tr>" +
+				"<tr><td>Winner: </td><td>" + (d.winner)+"</td></tr>" + "</table>";
 	}
-	
+
+	//sorts the array of objects by state and returns the state name ordered objects
+	function sortStates(a, b) {
+		var nameA = a.state;
+		var nameB = b.state;
+		
+		if (nameA < nameB) {
+			return -1;
+		}
+		if (nameA > nameB) {
+			return 1;
+		}
+		// names must be equal
+		return 0;
+	}
+
+	//determines if Clinton or Trump based on if number is positive or negative
+	function determineWinner (num1, num2) {
+		if (num1 - num2 > 0){
+			return "Clinton";
+		} else {
+			return "Trump";
+		}
+	}
+
+	//depending on value or margin of victory and the winner, this function determines the color of state
+	function determineColor (num, winner) {
+		if (num > 0 && num < 2) {
+			if (winner === "Clinton") {
+				return "#c4dce8"; //light blue
+			} else {
+				return "#e8c4d2"; //light red
+			}
+		}
+
+		if (num >= 2 && num < 6) {
+			if (winner === "Clinton") {
+				return "#79a6c8"; //medium blue
+			} else {
+				return "#c87979"; //medium red
+			}
+		}
+
+		if (num >= 6) {
+			if (winner === "Clinton") {
+				return "#204567"; //deep blue
+			} else {
+				return "#672020"; //deep red
+			}
+		}
+	}
+
+	//
+	function average(arr) {
+	    var clintonSums = {};
+	    var trumpSums = {};
+	    var counts = {};
+	    var results = [];
+	    var name;
+	    for (var i = 0; i < arr.length; i++) {
+	    	//check if state name already exists inside ClintonSums
+	        name = arr[i].state;
+	        if (!(name in clintonSums) && !(name in trumpSums)) {
+	        	//if not, then reset to zero and start over for new state
+	            clintonSums[name] = 0;
+	            trumpSums[name] = 0;
+	            counts[name] = 0;
+	        }
+	        //if it's a duplicate state, then iterate the total Clinton and Trump score totals
+	        clintonSums[name] = parseFloat(clintonSums[name]) + parseFloat(arr[i].Clinton);
+	        trumpSums[name] = parseFloat(trumpSums[name]) + parseFloat(arr[i].Trump);
+	        counts[name]++;
+	    }
+	    for(name in clintonSums) {
+	        //once done, calculate out the various averages using functions I wrote
+	        var clintonAvg = (clintonSums[name] / counts[name]).toFixed(5);
+	        var trumpAvg = (trumpSums[name] / counts[name]).toFixed(5);
+	        var winner = determineWinner(clintonAvg, trumpAvg);
+	        var marginVictory = Math.abs(clintonAvg - trumpAvg).toFixed(5);
+	        var color = determineColor(marginVictory, winner);
+
+	        //push all results into an object for each state
+	        results.push( 
+	        	{ 
+	        		name: name,
+	        	 	clintonAvg: clintonAvg,
+	        	 	trumpAvg: trumpAvg,
+	        	 	winner: winner,
+	        	 	marginVictory: marginVictory,
+	        	 	color: color
+	        	}
+	        );
+	    }
+	    //console.log("Clinton sums: " + JSON.stringify(clintonSums));
+	    //console.log("Trump sums: " + JSON.stringify(trumpSums));
+	    //console.log("counts " + JSON.stringify(counts));
+
+	    return JSON.stringify(results, null, 4);
+	}
+
+	var dataset = [];
+	var averagesByState = [];
+
+	//import data from the Polls.csv
+	d3.csv("Polls.csv", function(data) {
+
+  		//console.log("This is the original data from CSV file: " + JSON.stringify(dataset, null, 4));
+
+  		//sorts the array of objects by state and returns the state name-ordered array of objects
+		data.sort(sortStates);
+		//console.log("this is sorted Data" + JSON.stringify(dataset, null, 4));
+		//console.log("length test: " + dataset.length);
+		//console.log("test: " + dataset[0].state);
+
+		determines Trump or Clinton, and calculates the average scores and margin of victory
+		averagesByState = average(data);
+
+		console.log(averagesByState);	
+		// return averagesByState;
+	});
+
+
 	var sampleData ={};	/* Sample random data. */	
+
 	["HI", "AK", "FL", "SC", "GA", "AL", "NC", "TN", "RI", "CT", "MA",
 	"ME", "NH", "VT", "NY", "NJ", "PA", "DE", "MD", "WV", "KY", "OH", 
 	"MI", "WY", "MT", "ID", "WA", "DC", "TX", "CA", "AZ", "NV", "UT", 
@@ -73,179 +191,22 @@
 	"WI", "MO", "AR", "OK", "KS", "LS", "VA"]
 		.forEach(function(d){ 
 			var low=Math.round(100*Math.random()), 
-				mid=Math.round(100*Math.random()), 
-				high=Math.round(100*Math.random());
+			 	mid=Math.round(100*Math.random()), 
+			 	high=Math.round(100*Math.random());
 
 			sampleData[d] = {
 								low: d3.min([low,mid,high]), 
 								high: d3.max([low,mid,high]), 
 								avg: Math.round((low+mid+high)/3), 
 								//color: d3.interpolate("#ffffcc", "#800026")(low/100)
-								color: "blue"
+								color: determineColor(2, "Clinton")
 							}; 
 		});
-	
+
 	/* draw states on id #statesvg */	
 	uStates.draw("#statesvg", sampleData, tooltipHtml);
 	
 	d3.select(self.frameElement).style("height", "600px");
-
-
-
-// //working version
-// 	d3.csv("Polls.csv", function(data) {
-//   		for (var i = 0; i < data.length; i++){
-//   			dataset.push(data[i]);
-//   			//console.log(JSON.stringify(dataset[i]));
-//   		}
-
-//   		console.log("this is original Data" + JSON.stringify(dataset));
-
-//   		//sorts the array of objects by state and returns the state name-ordered objects
-// 		dataset.sort(sortStates);
-// 		console.log("this is sorted Data" + JSON.stringify(dataset));
-// 		console.log("length test: " + dataset.length);
-// 		console.log("test: " + dataset[0].state);
-// 	});
-
-//working version
-var averagedscores = [];
-var dataset = [];
-	d3.csv("Polls.csv", function(data) {
-  		for (var i = 0; i < data.length; i++){
-  			dataset.push(data[i]);
-  			//console.log(JSON.stringify(dataset[i]));
-  		}
-
-  		console.log("this is original Data" + JSON.stringify(dataset, null, 4));
-
-  		//sorts the array of objects by state and returns the state name-ordered objects
-		dataset.sort(sortStates);
-		console.log("this is sorted Data" + JSON.stringify(dataset, null, 4));
-		console.log("length test: " + dataset.length);
-		console.log("test: " + dataset[0].state);
-
-		//below works to display diff in score of each state
-		for (var i = 0; i < dataset.length; i++){
-
-			averagedscores.push( {
-									"difference": dataset[i].Clinton - dataset[i].Trump,
-									"state": dataset[i].state
-								} );
-			console.log("the difference: " + averagedscores[i].difference.toFixed(5) + " || the state: " + averagedscores[i].state);
-		}
-
-		var averagesByState = average(dataset)
-		console.log(averagesByState);
-
-		
-	});
-
-	function average(arr) {
-		    var clintonSums = {};
-		    var trumpSums = {};
-		    var counts = {};
-		    var results = [];
-		    var name;
-		    for (var i = 0; i < arr.length; i++) {
-		    	//debugger;
-		        name = arr[i].state;
-		        if (!(name in clintonSums) && !(name in trumpSums)) {
-		            clintonSums[name] = 0;
-		            trumpSums[name] = 0;
-		            counts[name] = 0;
-		        }
-		        clintonSums[name] = parseFloat(clintonSums[name]) + parseFloat(arr[i].Clinton);
-		        trumpSums[name] = parseFloat(trumpSums[name]) + parseFloat(arr[i].Trump);
-		        counts[name]++;
-		    }
-		    for(name in clintonSums) {
-		        //debugger;
-		        results.push( 
-		        	{ 
-		        		name: name,
-		        	 	clintonAvg: (clintonSums[name] / counts[name]).toFixed(5),
-		        	 	trumpAvg: (trumpSums[name] / counts[name]).toFixed(5),
-		        	 	winner: determineWinner((clintonSums[name] / counts[name]).toFixed(5), (trumpSums[name] / counts[name]).toFixed(5)),
-		        	 	//determineWinner(clintonSums[name], trumpSums[name]),
-		        	 	marginVictory: Math.abs((clintonSums[name] / counts[name]) - (trumpSums[name] / counts[name])).toFixed(5)
-		        	}
-		        );
-
-		    }
-		    console.log("Clinton sums: " + JSON.stringify(clintonSums));
-		    console.log("Trump sums: " + JSON.stringify(trumpSums));
-		    console.log("counts " + JSON.stringify(counts));
-
-		    return JSON.stringify(results, null, 4);
-		}
-
-	// var graphData = [];
-
-	// function importData() {
-	// 	var please = d3.csv("Polls.csv", function(data) {
- //  		// for (var i = 0; i < data.length; i++){
- //  		// 	dataset.push(data[i]);
- //  		// 	//console.log(JSON.stringify(dataset[i]));
- //  		// }
- //  		// dataset.sort(sortStates);
- //  		//console.log(JSON.stringify(dataset));
- //  		//return JSON.stringify(dataset);
- //  		//console.log("suh dude " + JSON.stringify(data));
- //  		return "suh dude " + JSON.stringify(data);
- //  		});
- //  		return please;
- //  	}
- //  	var testies = importData();
- //  	console.log("WORK: " + testies);
- //  	//console.log("Please work : " + importData());
- //  		//console.log("this is original Data" + JSON.stringify(dataset));
-
-
-
-
-
-
-
-
-
-  		//sorts the array of objects by state and returns the state name-ordered objects
-		function sortStates(a, b) {
-			var nameA = a.state;
-			var nameB = b.state;
-			
-			if (nameA < nameB) {
-				return -1;
-			}
-			if (nameA > nameB) {
-				return 1;
-			}
-			// names must be equal
-			return 0;
-		}
-
-		// function calculateMarginVictory(clinton, trump){
-		// 	if (clinton - trump > 0){
-		// 		return (clinton - trump).toFixed(5);
-		// 	}
-		// 	if (clinton - trump < 0){
-		// 		return (clinton - trump).toFixed(5);
-		// 	}
-		// }
-
-		function determineWinner (num1, num2) {
-			if (num1 - num2 > 0){
-				return "Clinton";
-			} else {
-				return "Trump";
-			}
-		}
-
-
-
-
-
 		
 </script>
-
 </body>
