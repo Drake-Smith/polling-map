@@ -80,7 +80,8 @@
 								low: d3.min([low,mid,high]), 
 								high: d3.max([low,mid,high]), 
 								avg: Math.round((low+mid+high)/3), 
-								color: d3.interpolate("#ffffcc", "#800026")(low/100)
+								//color: d3.interpolate("#ffffcc", "#800026")(low/100)
+								color: "blue"
 							}; 
 		});
 	
@@ -108,27 +109,76 @@
 // 	});
 
 //working version
-var averagedscores = {};
+var averagedscores = [];
+var dataset = [];
 	d3.csv("Polls.csv", function(data) {
   		for (var i = 0; i < data.length; i++){
   			dataset.push(data[i]);
   			//console.log(JSON.stringify(dataset[i]));
   		}
 
-  		console.log("this is original Data" + JSON.stringify(dataset));
+  		console.log("this is original Data" + JSON.stringify(dataset, null, 4));
 
   		//sorts the array of objects by state and returns the state name-ordered objects
 		dataset.sort(sortStates);
-		console.log("this is sorted Data" + JSON.stringify(dataset));
+		console.log("this is sorted Data" + JSON.stringify(dataset, null, 4));
 		console.log("length test: " + dataset.length);
 		console.log("test: " + dataset[0].state);
 
+		//below works to display diff in score of each state
 		for (var i = 0; i < dataset.length; i++){
-			var numEntries = 0;
-			console.log("Clinton: " + dataset[i].Clinton);
+
+			averagedscores.push( {
+									"difference": dataset[i].Clinton - dataset[i].Trump,
+									"state": dataset[i].state
+								} );
+			console.log("the difference: " + averagedscores[i].difference.toFixed(5) + " || the state: " + averagedscores[i].state);
 		}
 
+		var averagesByState = average(dataset)
+		console.log(averagesByState);
+
+		
 	});
+
+	function average(arr) {
+		    var clintonSums = {};
+		    var trumpSums = {};
+		    var counts = {};
+		    var results = [];
+		    var name;
+		    for (var i = 0; i < arr.length; i++) {
+		    	//debugger;
+		        name = arr[i].state;
+		        if (!(name in clintonSums) && !(name in trumpSums)) {
+		            clintonSums[name] = 0;
+		            trumpSums[name] = 0;
+		            counts[name] = 0;
+		        }
+		        clintonSums[name] = parseFloat(clintonSums[name]) + parseFloat(arr[i].Clinton);
+		        trumpSums[name] = parseFloat(trumpSums[name]) + parseFloat(arr[i].Trump);
+		        counts[name]++;
+		    }
+		    for(name in clintonSums) {
+		        //debugger;
+		        results.push( 
+		        	{ 
+		        		name: name,
+		        	 	clintonAvg: (clintonSums[name] / counts[name]).toFixed(5),
+		        	 	trumpAvg: (trumpSums[name] / counts[name]).toFixed(5),
+		        	 	winner: determineWinner((clintonSums[name] / counts[name]).toFixed(5), (trumpSums[name] / counts[name]).toFixed(5)),
+		        	 	//determineWinner(clintonSums[name], trumpSums[name]),
+		        	 	marginVictory: Math.abs((clintonSums[name] / counts[name]) - (trumpSums[name] / counts[name])).toFixed(5)
+		        	}
+		        );
+
+		    }
+		    console.log("Clinton sums: " + JSON.stringify(clintonSums));
+		    console.log("Trump sums: " + JSON.stringify(trumpSums));
+		    console.log("counts " + JSON.stringify(counts));
+
+		    return JSON.stringify(results, null, 4);
+		}
 
 	// var graphData = [];
 
@@ -174,17 +224,22 @@ var averagedscores = {};
 			return 0;
 		}
 
-	
-	function calculateAvg(clinton, trump){
-		if (clinton - trump > 0){
-			var c = "C";
-			return (clinton - trump) + c;
+		// function calculateMarginVictory(clinton, trump){
+		// 	if (clinton - trump > 0){
+		// 		return (clinton - trump).toFixed(5);
+		// 	}
+		// 	if (clinton - trump < 0){
+		// 		return (clinton - trump).toFixed(5);
+		// 	}
+		// }
+
+		function determineWinner (num1, num2) {
+			if (num1 - num2 > 0){
+				return "Clinton";
+			} else {
+				return "Trump";
+			}
 		}
-		if (clinton - trump < 0){
-			var t = "T";
-			return (Math.abs(clinton - trump)) + t;
-		}
-	}
 
 
 
