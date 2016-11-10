@@ -89,9 +89,26 @@
 	
 	d3.select(self.frameElement).style("height", "600px");
 
-	var dataset = [];
+
+
+// //working version
+// 	d3.csv("Polls.csv", function(data) {
+//   		for (var i = 0; i < data.length; i++){
+//   			dataset.push(data[i]);
+//   			//console.log(JSON.stringify(dataset[i]));
+//   		}
+
+//   		console.log("this is original Data" + JSON.stringify(dataset));
+
+//   		//sorts the array of objects by state and returns the state name-ordered objects
+// 		dataset.sort(sortStates);
+// 		console.log("this is sorted Data" + JSON.stringify(dataset));
+// 		console.log("length test: " + dataset.length);
+// 		console.log("test: " + dataset[0].state);
+// 	});
 
 //working version
+var averagedscores = {};
 	d3.csv("Polls.csv", function(data) {
   		for (var i = 0; i < data.length; i++){
   			dataset.push(data[i]);
@@ -106,7 +123,11 @@
 		console.log("length test: " + dataset.length);
 		console.log("test: " + dataset[0].state);
 
-		
+		for (var i = 0; i < dataset.length; i++){
+			var numEntries = 0;
+			console.log("Clinton: " + dataset[i].Clinton);
+		}
+
 	});
 
 	// var graphData = [];
